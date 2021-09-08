@@ -10,3 +10,72 @@ Some reasons of using *System firmware*:
 - Lack of centralized knowledge of system state.
 - Complex implementation challenges with regards to implementation of workarounds for system quirks.
 - Equivalent system capability entitlement on all variations of operation conditions.
+
+# What's K3 device? K3 is a TI multi-core SoC architecture platform.
+TI's K3 devices introduces the concept of a centralized Power, Resource & Security Management.
+
+First of all, System firmware is a collective term of services which  consists of
+1. TI Foundational Security (TIFS)
+2. Resource Management (RM)
+3. Power Management (PM) 
+
+** Where does the System Firmware execute?
+
+System Firmware executes on the Security Manager and Device Manager Core. But the Security Manager Core and Device Manager Core could reside either in DMSC subsystem or MCU R5F. Below is a table illustrate the relationship:
+
+#+caption: TI Foundational Security Software and RM/PM SCI Server
+| Device             | TI Foundation Security | 3rd Party HSM/SHE stack |
+|--------------------+------------------------+-------------------------|
+| AM65x/DRA80x,AM64x | DMSC (M3 based)        | NA                      |
+| DRA82x, TDA4X      | DMSC(M3 based)         | DMSC (M3 based)         |
+
+The TI provided software does not allow for a given SoC to support both HSM and non-HSM applications. The table above is also a mapping relationship for SoC and HSM support.
+
+** How to define the software interface/responsibility for the SYSFW?
+
+TIFS is responsible for Centralized Foundational Security Management. These include functions like *authenticated boot*, *JTAG unlock* etc.
+
+TIFS behaves like a forwarding agent for Resource Management and Power Management requests/responses by Secure hosts(other CPUs) in the SoC.
+
+TIFS is responsible for Firewall Management for resources requested by both secure and non-secure hosts.
+
+Device Manager which refers to DMSC M3 or MCU R5F based on the device, it is responsible for servicing resource management and power management messages from secure and non-secure hosts.
+
+Also, it is responsible for forwarding non-secure host requests to set the processor boot control or firewall configuration for safety applications to the DMSC, and for forwarding response received from the DMSC to non-secure hosts for the above forwarded messages.
+
+** What's Centralized Device Management?
+
+The question is, why do we need a Centralized Device Management? From TI's perspective in Power management domain, every device has 1) Different power and clock domains 2) Derivatives have slight differences in the clocking architecture based on combination of modules. 
+
+From the context, we shall know implicitly that the Device Management equals to Power management and Resource Management. The centralized Power Management provides an OS agnostic interface for power management across all OSes for different peripherals, clocks and processors.
+
+Centralized Resource Management is driven by the centralized DMA architecture. Key components of the centralized resource management include:
+1. Navigator Subsystem: Collection of Data movement components
+2. UDMA (Unified DMA), PKTDMA, BCDMA: DMA engine
+3. RA (Ring Accelerator)
+4. Proxy: Allows efficient access to RA queues
+5. Interrput & events handling: Interrupt aggregators and Interrupt routers.
+
+** What's Centralized Foundational Security Management?
+
+The DMSC subsystem is responsible to run the *software stack* for the device foundational security management. This software stack/entity is responsible for:
+
+1. Secure boot with secure keys/root-of-trust, Security configuration and Debug unlock
+2. RSA or ECC Root Keys, AES symmetric key storage
+3. Utilizes PKA, SHA2 and AES Crypto accelerators
+4. (Optional) Basic security functionality to extend root of trust
+5. Authenticated Key ring to extend root-of-trust keys
+6. SYSFW and Bootloader Rollback protection via eFuse
+7. Device Unique Key / Key Derivation to support 3P stacks
+# What is 3P stacks? 
+# What is PKA, SHA2?
+# What is authenticated key ring?
+
+The concepts of *System Control Entity* and *System Firmware* is interchangeably.
+
+*** What is "Host"?
+
+Any software and hardware entity which communicate with the System Control Entity is referred to as "Host".
+
+#+caption: System Controller Entity interacting with Other Hosts
+[[file:clips/System Controller Entity interacting with Other Hosts.png][System Controller Entity interacting with Other Hosts]]
